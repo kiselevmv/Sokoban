@@ -23,13 +23,13 @@ public class Sokoban extends Application {
     private static final int GRID_HEIGHT = 11;
 
     enum TileType {
-        FLOOR, WALL, PLAYER, CRATE, TARGET
+        FLOOR, WALL, PLAYER, CRATE, TARGET, CRATE_ON_TARGET
     }
 
     private TileType[][] grid = new TileType[GRID_HEIGHT][GRID_WIDTH];
     private boolean[][] isTarget = new boolean[GRID_HEIGHT][GRID_WIDTH];
 
-    private int playerX = 1, playerY = 1; // Initial player position
+    private int playerX, playerY; // Initial player position
     GridPane root = new GridPane();
 
     private Image playerImage = new Image(getClass().getResourceAsStream("/resources/Character4.png"));
@@ -66,19 +66,20 @@ public class Sokoban extends Application {
 
                 if (grid[y][x] == TileType.CRATE && isTarget[y][x]) {
                     tileView.setImage(crateOnTargetImage); // New image for crates on targets
-                    // It is still impossible to move crate on the target
+                    // [TODO] It is still impossible to move crate on the target
                 } else {
                     switch (grid[y][x]) {
                         case FLOOR -> tileView.setImage(floorImage);
                         case WALL -> tileView.setImage(wallImage);
-                        case PLAYER -> tileView.setImage(playerImage);
+                        // case PLAYER -> tileView.setImage(playerImage);
                         case CRATE -> tileView.setImage(crateImage);
                         case TARGET -> tileView.setImage(targetImage);
+                        case CRATE_ON_TARGET -> tileView.setImage(crateOnTargetImage);
                     }
                 }
                 root.add(tileView, x, y);
             }
-        }
+        root.add()
     }
 
     // Handle player movement
@@ -99,8 +100,11 @@ public class Sokoban extends Application {
         }
 
         // Check if the move is valid
-        if (grid[newY][newX] == TileType.FLOOR || isTarget[newY][newX]) {
+        if (grid[newY][newX] == TileType.FLOOR || grid[newY][newX] ==  TileType.TARGET) { //isTarget[newY][newX] 
+            // If new position is FLOOR or TARGET
             grid[playerY][playerX] = isTarget[playerY][playerX] ? TileType.TARGET : TileType.FLOOR;
+            // If player is ABOVE target we could remove the target after walk above it.
+            // [TODO] do not use PLAYER tile. Just draw player tile above tiles at the end of draw
             // Clear old position
             playerX = newX;
             playerY = newY;
@@ -111,9 +115,9 @@ public class Sokoban extends Application {
             int crateNewY = newY + (newY - playerY);
 
             if (grid[crateNewY][crateNewX] == TileType.FLOOR || isTarget[crateNewY][crateNewX]) {
-                // ✅ Remove the player from the old position properly
+                // Remove the player from the old position properly
                 grid[playerY][playerX] = isTarget[playerY][playerX] ? TileType.TARGET : TileType.FLOOR;
-                // ✅ Move crate
+                // Move crate
                 grid[newY][newX] = isTarget[newY][newX] ? TileType.TARGET : TileType.FLOOR; // Restore target if needed
                 grid[crateNewY][crateNewX] = TileType.CRATE; // Move crate
                 playerX = newX;
@@ -133,6 +137,7 @@ public class Sokoban extends Application {
             }
         }
     }
+    // While we have at least one crate not on target - game continues
 
     Alert alert = new Alert(AlertType.INFORMATION);
     alert.setTitle("Congratulations!");
