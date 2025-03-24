@@ -79,7 +79,15 @@ public class Sokoban extends Application {
                 }
                 root.add(tileView, x, y);
             }
-        root.add()
+        }
+        ImageView tileView = new ImageView();
+        tileView.setFitWidth(TILE_SIZE);
+        tileView.setFitHeight(TILE_SIZE);
+        // tileView above was inside for loop. It was local variable of loop.
+        tileView.setImage(playerImage);
+        root.add(tileView, playerX, playerY);
+        // We just put player tile above the grid at the end of draw board cycle. 
+        // So it does not "shade" tiles below the player.
     }
 
     // Handle player movement
