@@ -12,6 +12,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import java.util.List;
 
 import javafx.scene.control.Alert;
@@ -108,44 +110,49 @@ public class Sokoban extends Application {
         }
 
         // Check if the move is valid
-        if (grid[newY][newX] == TileType.FLOOR || grid[newY][newX] ==  TileType.TARGET) { //isTarget[newY][newX] 
-            // If new position is FLOOR or TARGET
-            grid[playerY][playerX] = isTarget[playerY][playerX] ? TileType.TARGET : TileType.FLOOR;
-            // If player is ABOVE target we could remove the target after walk above it.
-            // [TODO] do not use PLAYER tile. Just draw player tile above tiles at the end of draw
-            // Clear old position
+        if (grid[newY][newX] == TileType.FLOOR || grid[newY][newX] ==  TileType.TARGET) { 
+            // If new position is FLOOR or TARGET - we can move there freely
             playerX = newX;
             playerY = newY;
-            grid[playerY][playerX] = TileType.PLAYER; // Move player
-        } 
-        else if (grid[newY][newX] == TileType.CRATE) {
+        } else if (grid[newY][newX] == TileType.CRATE || grid[newY][newX] == TileType.CRATE_ON_TARGET) {
+            // If new position is CRATE or CRATE_ON_TARGET - we need to push the crate forward
             int crateNewX = newX + (newX - playerX);
             int crateNewY = newY + (newY - playerY);
 
-            if (grid[crateNewY][crateNewX] == TileType.FLOOR || isTarget[crateNewY][crateNewX]) {
-                // Remove the player from the old position properly
-                grid[playerY][playerX] = isTarget[playerY][playerX] ? TileType.TARGET : TileType.FLOOR;
+            if (grid[crateNewY][crateNewX] == TileType.FLOOR) {// || grid[crateNewY][crateNewX] == TileType.TARGET) {
+                // If new position is FLOOR - we can move crate here
                 // Move crate
-                grid[newY][newX] = isTarget[newY][newX] ? TileType.TARGET : TileType.FLOOR; // Restore target if needed
+                grid[newY][newX] = (grid[newY][newX] == TileType.TARGET) ? TileType.TARGET : TileType.FLOOR; // Restore target if needed
                 grid[crateNewY][crateNewX] = TileType.CRATE; // Move crate
                 playerX = newX;
                 playerY = newY;
-                grid[playerY][playerX] = TileType.PLAYER;
+            } else if (grid[crateNewY][crateNewX] == TileType.TARGET) {
+                // If new position is TARGET - we can move crate here, but we need to restore previous position 
+                // Move crate
+                grid[newY][newX] = (grid[newY][newX] == TileType.CRATE_ON_TARGET) ? TileType.TARGET : TileType.FLOOR; // Restore tile behind
+                grid[crateNewY][crateNewX] = TileType.CRATE_ON_TARGET; // Move crate on target
+                playerX = newX;
+                playerY = newY;
             }
         }
-        checkWinCondition(); // ✅ Check if all crates are on targets
-        drawGrid();
+        drawGrid(); // Refresh screen
+        checkWinCondition(); // ✅ Check win condition after each move
     }
 
     private void checkWinCondition() {
-    for (int y = 0; y < GRID_HEIGHT; y++) {
-        for (int x = 0; x < GRID_WIDTH; x++) {
-            if (isTarget[y][x] && grid[y][x] != TileType.CRATE) {
-                return; // ✅ Not all crates are on targets yet
+        /* 
+        for (int y = 0; y < GRID_HEIGHT; y++) {
+            for (int x = 0; x < GRID_WIDTH; x++) {
+                if (grid[y][x] == TileType.CRATE) {
+                    return; // ✅ Not all crates are on targets yet
+                }
             }
+        } */
+    // Use Java collection to check if all crates are on targets
+        if (Arrays.stream(grid).flatMap(Arrays::stream).anyMatch(tile -> tile == TileType.CRATE)) {
+            return; // ✅ Not all crates are on targets yet
         }
-    }
-    // While we have at least one crate not on target - game continues
+    // While we have at least one crate on a board - game continues
 
     Alert alert = new Alert(AlertType.INFORMATION);
     alert.setTitle("Congratulations!");
@@ -177,14 +184,10 @@ public class Sokoban extends Application {
                 char c = lines.get(y).charAt(x);
                 switch (c) {
                     case '#' -> grid[y][x] = TileType.WALL;
-                        
-                    case '.' -> {
-                        grid[y][x] = TileType.TARGET;
-                        isTarget[y][x] = true;
-                    }
+                    case '.' -> grid[y][x] = TileType.TARGET;
                     case '$' -> grid[y][x] = TileType.CRATE;
                     case '@' -> {
-                        grid[y][x] = TileType.PLAYER;
+                        grid[y][x] = TileType.FLOOR;
                         playerX = x;
                         playerY = y;
                     }
