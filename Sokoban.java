@@ -66,18 +66,12 @@ public class Sokoban extends Application {
                 tileView.setFitWidth(TILE_SIZE);
                 tileView.setFitHeight(TILE_SIZE);
 
-                if (grid[y][x] == TileType.CRATE && isTarget[y][x]) {
-                    tileView.setImage(crateOnTargetImage); // New image for crates on targets
-                    // [TODO] It is still impossible to move crate on the target
-                } else {
-                    switch (grid[y][x]) {
-                        case FLOOR -> tileView.setImage(floorImage);
-                        case WALL -> tileView.setImage(wallImage);
-                        // case PLAYER -> tileView.setImage(playerImage);
-                        case CRATE -> tileView.setImage(crateImage);
-                        case TARGET -> tileView.setImage(targetImage);
-                        case CRATE_ON_TARGET -> tileView.setImage(crateOnTargetImage);
-                    }
+                switch (grid[y][x]) {
+                    case FLOOR -> tileView.setImage(floorImage);
+                    case WALL -> tileView.setImage(wallImage);
+                    case CRATE -> tileView.setImage(crateImage);
+                    case TARGET -> tileView.setImage(targetImage);
+                    case CRATE_ON_TARGET -> tileView.setImage(crateOnTargetImage);
                 }
                 root.add(tileView, x, y);
             }
