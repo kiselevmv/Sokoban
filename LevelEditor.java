@@ -6,10 +6,13 @@ import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.control.Button;
+import javafx.scene.control.ToolBar;
+import javafx.scene.layout.BorderPane;
 
 public class LevelEditor extends Application {
-    private static final int ROWS = 20;
-    private static final int COLS = 30;
+    private static final int ROWS = 16;
+    private static final int COLS = 20;
     private static final int TILE_SIZE = 40;
 
     enum TileType {
@@ -18,29 +21,50 @@ public class LevelEditor extends Application {
 
     private TileType[][] grid = new TileType[ROWS][COLS];
 
-    private Image playerImage = new Image(getClass().getResourceAsStream("/resources/Character4.png"));
-    private Image wallImage = new Image(getClass().getResourceAsStream("/resources/Wall_Brown.png"));
-    private Image floorImage = new Image(getClass().getResourceAsStream("/resources/Ground_Concrete.png"));
-    private Image crateImage = new Image(getClass().getResourceAsStream("/resources/CrateDark_Blue.png"));
-    private Image targetImage = new Image(getClass().getResourceAsStream("/resources/EndPoint_Red.png"));
-    private Image crateOnTargetImage = new Image(getClass().getResourceAsStream("/resources/Crate_Yellow.png"));
+    TileType activeTileType = TileType.FLOOR;
+
+    // Define image for all TileTypes
+    Image playerImage = new Image(getClass().getResourceAsStream("/resources/Character4.png"));
+    Image wallImage = new Image(getClass().getResourceAsStream("/resources/Wall_Brown.png"));
+    Image floorImage = new Image(getClass().getResourceAsStream("/resources/Ground_Concrete.png"));
+    Image crateImage = new Image(getClass().getResourceAsStream("/resources/CrateDark_Blue.png"));
+    Image targetImage = new Image(getClass().getResourceAsStream("/resources/EndPoint_Red.png"));
+    Image crateOnTargetImage = new Image(getClass().getResourceAsStream("/resources/Crate_Yellow.png"));
 
     GridPane board = new GridPane();
+
+    // Icon size
+    int iconSize = 48;
+
+    // Create buttons with large icons
+    Button floorButton = createIconButton(floorImage, iconSize, "FLOOR");
+    floorButton.setOnAction(event -> handleFloorTile());
+    Button wallButton = createIconButton(wallImage, iconSize, "WALL");
+    Button crateButton = createIconButton(crateImage, iconSize, "CRATE");
+    Button playerButton = createIconButton(playerImage, iconSize, "PLAYER");
+    Button targetButton = createIconButton(targetImage, iconSize, "TARGET");
 
     @Override
     public void start(Stage primaryStage) {    
 
-        Scene scene = new Scene(board, COLS * TILE_SIZE, ROWS * TILE_SIZE);
-        
+        // Create initial field, filled with FLOOR tiles
         for (int row = 0; row < ROWS; row++) {
             for (int col = 0; col < COLS; col++) {
                 grid[row][col] = TileType.FLOOR;
             }
         }
 
+        // Create toolbar and add buttons
+        ToolBar toolBar = new ToolBar(floorButton, wallButton, crateButton, playerButton, targetButton);
+
+        // Layout
+        BorderPane root = new BorderPane();
+        root.setTop(toolBar);   // ToolBar at the top
+        root.setCenter(board);  // GridPane below
+
+        Scene scene = new Scene(root, COLS * TILE_SIZE, ROWS * TILE_SIZE);
+
         primaryStage.setScene(scene);
-        // Обработчик кликов по GridPane
-        scene.setOnMouseClicked(this::handleClick);
         primaryStage.setTitle("Level editor");
         primaryStage.show();
 
@@ -62,17 +86,39 @@ public class LevelEditor extends Application {
                     case TARGET -> tileView.setImage(targetImage);
                     case CRATE_ON_TARGET -> tileView.setImage(crateOnTargetImage);
                 }
-                board.add(tileView, row, col);
+                
+                final int clickedRow = row;
+                final int clickedCol = col;
+
+                // Добавляем обработчик кликов для ImageView
+                tileView.setOnMouseClicked(event -> handleImageClick(event, clickedRow, clickedCol));
+
+                board.add(tileView, col, row);
             }
         }
     }
 
-    private void handleClick(MouseEvent event) {
-        int col = (int) (event.getX() / TILE_SIZE);
-        int row = (int) (event.getY() / TILE_SIZE);
-        System.out.println("Clicked on cell: (" + row + ", " + col + ")");
+    private void handleImageClick(MouseEvent event, int row, int col) {
+        System.out.println("Clicked on ImageView at cell: (" + row + ", " + col + ")");
         grid[row][col] = TileType.WALL;
         drawGrid();
+    }
+
+    // Helper method to create a button with an icon
+    private Button createIconButton(Image image, int size, String actionName) {
+        ImageView imageView = new ImageView(image);
+        imageView.setFitWidth(size);
+        imageView.setFitHeight(size);
+
+        Button button = new Button("", imageView); // Empty text, only icon
+        button.setStyle("-fx-background-color: transparent;"); // Optional: removes button background
+        button.setOnAction(event -> System.out.println(actionName + " button clicked!"));
+
+        return button;
+    }
+    
+    private void handleFloorTile() {
+        activeTileType = TileType.FLOOR;
     }
 
     public static void main(String[] args) {
