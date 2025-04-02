@@ -21,7 +21,7 @@ public class LevelEditor extends Application {
 
     private TileType[][] grid = new TileType[ROWS][COLS];
 
-    TileType activeTileType = TileType.FLOOR;
+    TileType activeTileType = TileType.WALL;
 
     // Define image for all TileTypes
     Image playerImage = new Image(getClass().getResourceAsStream("/resources/Character4.png"));
@@ -38,7 +38,6 @@ public class LevelEditor extends Application {
 
     // Create buttons with large icons
     Button floorButton = createIconButton(floorImage, iconSize, "FLOOR");
-    floorButton.setOnAction(event -> handleFloorTile());
     Button wallButton = createIconButton(wallImage, iconSize, "WALL");
     Button crateButton = createIconButton(crateImage, iconSize, "CRATE");
     Button playerButton = createIconButton(playerImage, iconSize, "PLAYER");
@@ -53,6 +52,12 @@ public class LevelEditor extends Application {
                 grid[row][col] = TileType.FLOOR;
             }
         }
+
+        floorButton.setOnAction(event -> handleFloorTile());
+        wallButton.setOnAction(event -> handleWallTile());
+        crateButton.setOnAction(event -> handleCrateTile());
+        playerButton.setOnAction(event -> handlePlayerTile());
+        targetButton.setOnAction(event -> handleTargetTile());
 
         // Create toolbar and add buttons
         ToolBar toolBar = new ToolBar(floorButton, wallButton, crateButton, playerButton, targetButton);
@@ -84,6 +89,7 @@ public class LevelEditor extends Application {
                     case WALL -> tileView.setImage(wallImage);
                     case CRATE -> tileView.setImage(crateImage);
                     case TARGET -> tileView.setImage(targetImage);
+                    case PLAYER -> tileView.setImage(playerImage);
                     case CRATE_ON_TARGET -> tileView.setImage(crateOnTargetImage);
                 }
                 
@@ -100,7 +106,7 @@ public class LevelEditor extends Application {
 
     private void handleImageClick(MouseEvent event, int row, int col) {
         System.out.println("Clicked on ImageView at cell: (" + row + ", " + col + ")");
-        grid[row][col] = TileType.WALL;
+        grid[row][col] = activeTileType;
         drawGrid();
     }
 
@@ -119,6 +125,22 @@ public class LevelEditor extends Application {
     
     private void handleFloorTile() {
         activeTileType = TileType.FLOOR;
+    }
+
+    private void handleWallTile() {
+        activeTileType = TileType.WALL;
+    }
+
+    private void handlePlayerTile() {
+        activeTileType = TileType.PLAYER;
+    }
+
+    private void handleCrateTile () {
+        activeTileType = TileType.CRATE;
+    }
+
+    private void handleTargetTile() {
+        activeTileType = TileType.TARGET;
     }
 
     public static void main(String[] args) {
