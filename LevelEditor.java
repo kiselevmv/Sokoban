@@ -44,7 +44,7 @@ public class LevelEditor extends Application {
     Button targetButton = createIconButton(targetImage, iconSize, "TARGET");
 
     @Override
-    public void start(Stage primaryStage) {    
+    public void start(Stage primaryStage) {
 
         // Create initial field, filled with FLOOR tiles
         for (int row = 0; row < ROWS; row++) {
@@ -96,7 +96,8 @@ public class LevelEditor extends Application {
                 final int clickedRow = row;
                 final int clickedCol = col;
 
-                // Добавляем обработчик кликов для ImageView
+                // Add an handler for each ImageView
+                // We have to use "final" variables for the reason I do not know
                 tileView.setOnMouseClicked(event -> handleImageClick(event, clickedRow, clickedCol));
 
                 board.add(tileView, col, row);
